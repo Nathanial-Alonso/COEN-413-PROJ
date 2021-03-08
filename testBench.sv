@@ -11,33 +11,12 @@ module testbench;
 	logic [1:7] reset;
 
 	// Inputs
-	logic [0:3] req1_cmd_in;
-	logic [0:31] req1_data_in;
 
-	logic [0:3] req2_cmd_in;
-	logic [0:31] req2_data_in;
-
-	logic [0:3] req3_cmd_in;
-	logic [0:31] req3_data_in;
-
-	logic [0:3] req4_cmd_in;
-	logic [0:31] req4_data_in;
-
-	// Outputs
-	logic [0:1] out_resp1;
-	logic [0:31] out_data1;
-
-	logic [0:1] out_resp2;
-	logic [0:31] out_data2;
-
-	logic [0:1] out_resp3;
-	logic [0:31] out_data3;
-
-	logic [0:1] out_resp4;
-	logic [0:31] out_data4;
+	logic [0:3] cmd [4];
+	logic [0:31] data_in[4];
+	logic [0:31] data_out[4];
+	logic [0:1] resp[4];
 	
-	// Local testing variables
-	integer error;	
 	
 	// Instantiate the Device Under Test : the Calculator
 	calc1_top calc1_top(
@@ -45,34 +24,32 @@ module testbench;
 		.reset(reset),
 
 		// Inputs
-		.req1_cmd_in(req1_cmd_in),
-		.req1_data_in(req1_data_in),
+		.req1_cmd_in(cmd[0]),
+		.req1_data_in(data_in[0]),
 
-		.req2_cmd_in(req2_cmd_in),
-		.req2_data_in(req2_data_in),
+		.req2_cmd_in(cmd[1]),
+		.req2_data_in(data_in[1]),
 
-		.req3_cmd_in(req3_cmd_in),
-		.req3_data_in(req3_data_in),
+		.req3_cmd_in(cmd[2]),
+		.req3_data_in(data_in[2]),
 
-		.req4_cmd_in(req4_cmd_in),
-		.req4_data_in(req4_data_in),
+		.req4_cmd_in(cmd[3]),
+		.req4_data_in(data_in[3]),
 
 		// Outputs
-		.out_resp1(out_resp1),
-		.out_data1(out_data1),
+		.out_resp1(resp[0]),
+		.out_data1(data_out[0]),
 
-		.out_resp2(out_resp2),
-		.out_data2(out_data2),
+		.out_resp2(resp[1]),
+		.out_data2(data_out[1]),
 
-		.out_resp3(out_resp3),
-		.out_data3(out_data3),
+		.out_resp3(resp[2]),
+		.out_data3(data_out[2]),
 
-		.out_resp4(out_resp4),
-		.out_data4(out_data4)
+		.out_resp4(resp[3]),
+		.out_data4(data_out[3])
 	 );
 
-	// Array for ports
-	int ports [4] = '{1,2,3,4};
 
 	// Clock generator
 	initial begin 
@@ -85,7 +62,6 @@ module testbench;
 		integer i;
 		int cycleOnReset = 1;
 
-
 		$display("----------first------");
 
 		/////////////////////////
@@ -95,32 +71,34 @@ module testbench;
 
 		//this is the working reset
 		//the specification reset is done by
-		//resetDUT(0)
+		resetDUT(0);
 
-		resetAll(cycleOnReset);
+		//resetAll(cycleOnReset);
 
 		$display("--------------------------------------------------------------------");
 		$display("----------Running Test 1.1 Command and Response for each port-------");
 		$display("--------------------------------------------------------------------");
 
-		for(i = 0; i < $size(ports); i++) begin
-			$display("Testing port #%d", ports[i]);
-			cycle_commands(ports[i],1);
-			resetAll(cycleOnReset);
+		for(i = 0; i < $size(cmd); i++) begin
+			$display("Testing port #%d", i);
+			cycle_commands(i,1);
+			//resetAll(cycleOnReset);
+			resetDUT(0);
 		end
 
 
+		
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 1.2.1 addition check ----------------");
 		$display("--------------------------------------------------------------------");
 
 
-		for(i = 0; i < $size(ports); i++) begin
-			$display("port #%b", ports[i]);
-			calculate(ports[i],0001,32'h00000005,32'h00000005);
-			compare_expected_value(ports[i],32'h0000000A);
-			resetDUT(cycleOnReset);
-				end
+		for(i = 0; i < $size(cmd); i++) begin
+			$display("port #%b", i);
+			calculate(i,4'b0001,32'h00000005,32'h00000005);
+			compare_expected_value(i,32'h0000000A);
+			resetDUT(0);
+		end
 
 		
 
@@ -129,11 +107,11 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		
 		
-		for(i = 0; i < $size(ports); i++) begin	
-		$display("Testing port #%d", ports[i]);
-		calculate(ports[i],4'b0010,32'h00000000,32'hFFFFFFFF);
-		compare_expected_value(ports[i],32'h00000003);
-		resetDUT(cycleOnReset);
+		for(i = 0; i < $size(cmd); i++) begin	
+		$display("Testing port #%d", i);
+		calculate(i,4'b0010,32'h00000000,32'hFFFFFFFF);
+		compare_expected_value(i,32'h00000003);
+		resetDUT(0);
 		end
 		
 		
@@ -142,9 +120,10 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 
 
-		for(i = 1; i < $size(ports); i++) begin
-			calculate(ports[i],0101,32'h00000005,32'h00000003);
-				compare_expected_value(ports[i],32'h00000028);
+		for(i = 1; i < $size(cmd); i++) begin
+			calculate(i,4'b0101,32'h00000005,32'h00000003);
+			compare_expected_value(i,32'h00000028);
+			resetDUT(0);
 		end
 
 
@@ -159,13 +138,13 @@ module testbench;
 		$display("----------Running Test 1.2.3 overflow check ----------------------");
 		$display("--------------------------------------------------------------------");
 		
-		for(i = 0; i < $size(ports); i++) begin
-			$display("Testing port #%d", ports[i]);
-			calculate(ports[i],0001,32'h00000000,32'hFFFFFFFF);
+		for(i = 0; i < $size(cmd); i++) begin
+			$display("Testing port #%d", i);
+			calculate(i,4'b0001,32'h00000000,32'hFFFFFFFF);
 		
-			check_for_response(ports[i]);
-			compare_expected_value(ports[i],32'h0000000A);
-			resetDUT();
+			check_for_response(i);
+			compare_expected_value(i,32'h0000000A);
+			resetDUT(0);
 		end
 		
 		
@@ -176,12 +155,12 @@ module testbench;
 		$display("----------Running Test 1.2.3 underflow check ----------------------");
 		$display("--------------------------------------------------------------------");
 
-				for(i = 0; i < $size(ports); i++) begin
-						$display("Testing port #%b", ports[i]);
-						calculate(ports[i],0010,32'h11111111,32'h20000000);
-			check_for_response(ports[i]);
-						resetDUT(cycleOnReset);
-				end
+			for(i = 0; i < $size(cmd); i++) begin
+				$display("Testing port #%d", i);
+				calculate(i,0010,32'h11111111,32'h20000000);
+				check_for_response(i);
+				resetDUT(0);
+			end
 
 
 
@@ -238,6 +217,14 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 
 
+
+	/////////////////////////
+	//GENERERIC FUNCTION TESTS
+	////////////////////////
+
+
+
+
 		$display("--------------------------------------------------------------------");
 		$display("----------Running Test 3.1 ignoring invalid commamnds---------------");
 		$display("--------------------------------------------------------------------");
@@ -249,6 +236,7 @@ module testbench;
 		$display("----------Running Test 3.2 output for all ports and invalid commands are corrent ------");
 		$display("--------------------------------------------------------------------");
 
+		
 
 
 
@@ -256,14 +244,23 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("----------test that the reset function resets the desgin properly---");
 		$display("--------------------------------------------------------------------");
-
-
-
-
-	/////////////////////////
-	//GENERERIC FUNCTION TESTS
-	////////////////////////
-
+			
+			resetDUT(0);  //does the default reset
+			for(int i = 0; i < $size(cmd); i++)begin
+				$display("Testing output Port %d", i);
+				if(resp[i] == 00)begin
+					$display("Response reset Sucessfully");
+				end
+				else begin
+					$display("FAIL: resp not reset %d", resp[i]);
+				end
+				if(data_out[i] ==32'h00000000)begin
+					$display("Response reset Sucessfully");
+				end
+				else begin
+					$display("FAIL: data out not reset %d", data_out[i]);
+				end
+			end
 	
 
 
@@ -280,7 +277,6 @@ task cycle_commands(int port,int checkResponse);
 
 	//now I want to cylce through commands
 
-
 	//testing only defined commands come back later and test invalid
 	logic [0:3] commands [5] = '{4'b0000,4'b0001,4'b0010,4'b0101,4'b0110};
 
@@ -288,31 +284,11 @@ task cycle_commands(int port,int checkResponse);
 		if(checkResponse == 1)begin
 			$display("Testing command %b",commands[j]);
 			end
-			if(port ==1)begin
-			req1_cmd_in <= commands[j];
-			req1_data_in <= 1;
-			@(posedge c_clk);
-			req1_data_in <= 3;
-			end
-		if(port == 2) begin
-			req2_cmd_in <= commands[j];
-			req2_data_in <= 1;
-			@(posedge c_clk);
-			req2_data_in <= 3;
-			end
-		if(port == 3)begin
-			req3_cmd_in <= commands[j];
-			req3_data_in <= 1;
-			@(posedge c_clk);
-			req3_data_in <= 3;
-		end
-		if(port == 4) begin
-			req4_cmd_in <= commands[j];
-			req4_data_in <= 1;
-			@(posedge c_clk);
-			req4_data_in <= 3;
-		end
 
+		cmd[port] <= commands[j];
+		data_in[port] <= 1;
+		@(posedge c_clk);
+		data_in[port] <= 3;
 		if(checkResponse == 1)begin
 			check_for_response(port);
 		end
@@ -323,53 +299,31 @@ endtask
 
 
 task check_for_response(int port);
-	logic [0:1] resp;
-	integer i;
-                    
+	integer i;                
 	for(i = 0; i < 100; i++) begin
 		@(posedge c_clk);
-		if(port == 1) begin
-			resp = out_resp1;
-		end
+	
 
-		if(port == 2) begin
-			resp = out_resp2;
-		end
-
-		if(port == 3) begin
-			resp = out_resp3;
-		end
-
-		if(port == 4) begin
-			resp = out_resp4;
-		end
-
-		if(resp == 01) begin
+		if(resp[port] == 01) begin
 			$display("Sucessful repsonse");
 			break;
 		end
-		if(resp == 10) begin
+		if(resp[port] == 10) begin
 			$display("Under flow overflow or invalid command" );
 			break;
 		end
-		if(resp == 11) begin
+		if(resp[port] == 11) begin
 			$display("unused response value obtained");
 			break;
 		end
-		if(resp === 2'bxx) begin
+		if(resp[port] === 2'bxx) begin
 			$display("Error: xx repsonse obtained");
-			
 			break;
 		end
 		
 	end
-
-	
-	if(resp == 00)begin
+	if(resp[port] == 00)begin
 		$display("NO RESPONSE");
-		if(port ==4)begin
-		
-		end
 	end	
 
 endtask
@@ -378,79 +332,29 @@ endtask
 // Function for calculate the answer of a given a command
 task calculate(int port, logic[0:3] command, logic[0:31] operand1, logic[0:31] operand2);
 	@(posedge c_clk);
-		if(port == 1) begin
-			$display("%b",command);
-			req1_cmd_in <= command;
-			req1_data_in <= operand1;
-			@(posedge c_clk);
-			req1_data_in <= operand2;
-			@(posedge c_clk);
-		end
-
-		if(port == 2) begin
-			req2_cmd_in <= command;
-			req2_data_in <= operand1;
-			@(posedge c_clk);
-			req2_data_in <= operand2;
-			@(posedge c_clk);
-		end
-		  
-		if(port == 3) begin
-			req3_cmd_in <= command;
-			req3_data_in <= operand1;
-			@(posedge c_clk);
-			req3_data_in <= operand2;
-			@(posedge c_clk);
-        end
-		
-		if(port == 4) begin
-			req4_cmd_in <= command;
-			req4_data_in <= operand1;
-			@(posedge c_clk);
-			req4_data_in <= operand2;
-			@(posedge c_clk);
-		end
+		cmd[port]<= command;
+		data_in[port] <= operand1;
+		@(posedge c_clk);
+		data_in[port] <= operand2;
+		@(posedge c_clk);
 endtask
 
 // Function to compare the actual value with the expected one
 task compare_expected_value(int port, logic[0:31] expected_data);
-	integer i;
-	logic [31:0] data_out;
-	logic [1:0] resp;  		
+	integer i;		
 
 	for(i = 0; i < 40; i++) begin
 	        @(posedge c_clk);
 		
-		if(port == 1) begin
-			data_out = out_data1;
-			resp = out_resp1;
-		end	
-
-		if(port == 2) begin
-			data_out = out_data2;
-			resp = out_resp2;
-        end
-
-		if(port == 3) begin
-			data_out = out_data3;
-			resp = out_resp3;	
-		end
-
-		if(port == 4) begin
-			data_out = out_data4;
-			resp = out_resp4;	
-		end
-		
-                if(resp == 01) begin
+                if(resp[port] == 01) begin
 			$display("The port being used is #%b", port);
 
-                if(expected_data == data_out) begin
-             		$display("expected data is equal to %b and data out is %b", expected_data, data_out);
-						
+                if(expected_data == data_out[port]) begin
+             		$display("expected data is equal to %b and data out is %b", expected_data, data_out[port]);
 				break;
 			end
            		else begin 
-				$display("expected data is equal to %b but data out is %b", expected_data, data_out);
+				$display("expected data is equal to %b but data out is %b", expected_data, data_out[port]);
 				break;
 			end
 		end
@@ -480,7 +384,7 @@ task resetDUT(int cycleStart);
 	end
 	resetInputs();
 	reset <= 7'b1111111;
-	//$display("resetting");	
+		
 	@(posedge c_clk);
 	@(posedge c_clk);
 	@(posedge c_clk);
@@ -500,17 +404,10 @@ endtask
 
 
 task resetInputs();
-	req1_cmd_in <= 0000;
-	req1_data_in <= 32'h00000000;
-
-	req2_cmd_in<= 0000;
-	req2_data_in<= 32'h00000000;
-
-	req3_cmd_in<= 0000;
-	req3_data_in<= 32'h00000000;
-
-	req4_cmd_in<= 0000;
-	req4_data_in<= 32'h00000000;
+	for(int i = 0; i < $size(cmd); i++)begin
+	cmd[i] <= 0000;
+	data_in[i] <= 32'h00000000;
+	end
 endtask
 
 
@@ -519,32 +416,17 @@ task displayIO();
 	$display("c_clk: %b", c_clk);
 	$display("reset: %b", reset);
 
-	// Inputs
-	$display("cmd1 %b", req1_cmd_in);
-	$display("data1 %b", req1_data_in);
 
-	$display("cmd2 %b", req2_cmd_in);
-	$display("data2 %b",req2_data_in);
 
-	$display( "cmd3 %b",req3_cmd_in);
-	$display("data3 %b",req3_data_in);
+	for(int i = 0; i < $size(cmd); i++)begin
+	$display("Port %d", i);
+	$display("cmd  %b", cmd[i]);
+	$display("data1 %b", data_in[i]);
+	$display("resp1 %b",resp[i]);
+	$display("dataout1 %b",data_out[i]);
 
-	$display("cmd4 %b",req4_cmd_in);
-	$display("data4 %b",req4_data_in);
+	end
 
-	//outputs
-
-	$display("resp1 %b",out_resp1);
-	$display("dataout1 %b",out_data1);
-
-	$display("resp2 %b",out_resp2);
-	$display("data_out2 %b", out_data2);
-
-	$display("resp3 %b",out_resp3);
-	$display("data_out3 %b",out_data3);
-
-	$display("resp4 %b",out_resp4);
-	$display(" dataout4 %b",out_data4);
 
 endtask;
 	
