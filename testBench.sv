@@ -84,7 +84,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("---------Running Test 1.1 Command and response for each port--------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(i = 0; i < $sixe(cmd); i++) begin
 			$display("Testing port %0d", i);
 			cycle_commands(i,1);
 			resetDUT(0);
@@ -181,9 +181,9 @@ module testbench;
 
 				$display("Testing first command %b",commands[j]);
 
-				for(int k = 0; k < $size(commands); k++)begin	// This is select subsequenct command
+				for(int k = 0; k < $size(commands); k++)begin	// This is select subsequent command
 					$display("Testing second command %b",commands[k]);
-					// Calulcate new command 	
+					// Calculate new command 	
 					calculate(i,commands[k],op1,op2);			
 					
 					// Check that the second didnt make the initial run change
@@ -198,7 +198,45 @@ module testbench;
 		$display("---------------Running Test 2.1.2 Concurrent commands---------------");
 		$display("--------------------------------------------------------------------");
 
+                resetDUT(0);
 
+                // For each command test on each port(with valid inputs) and test on another port after and ensure it ran properly
+                // Check that its not dirty after running a command before
+                // Expected value is then the first run of the command clean.
+
+                op1 = 32'h00000101;
+                op2 = 32'h00000111;
+                expected = 32'h00000000;
+
+                for(i = 0; i < $size(commands); i++) begin                                   // First loop is for all commands
+                        $display("Testing commands %b",commands[i]);
+
+                        for(int j = 0; j < $size(cmd); j++) begin          // Second is select first port
+                                // Getting expected value
+                                calculate(j,commands[i],op1,op2);
+                                expectedValue(op1,op2,commands[i],expected);
+				
+                                //resetting the DUT
+                                resetDUT(0);
+
+                                //$display("Testing first port %0d",j);
+
+                                for(int k = 0; k < $size(cmd); k++) begin   // This is select subsequent port
+                                        if(j != k) begin
+						$display("Testing first port %0d",j);
+						$display("Testing second port %0d",k);
+                                        	// Calculate new port
+                                        	calculate(k,commands[i],op1,op2);
+						
+						
+                                        	// Check that the second didnt make the initial run change
+                                        	calculate(j,commands[i],op1,op2);
+                                        	compare_expected_value(j,expected);
+                                        	resetDUT(0);
+					end
+                                end
+                        end
+                end
 
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 2.2 Priority check-------------------");
@@ -474,11 +512,11 @@ module testbench;
 		reset = 7'b1111111;
 			
 		repeat(7) @(posedge c_clk);
-		
+
 		reset = 7'b0000000;
 
 		for(int i = 0; i < 400; i++) begin
-		 @(posedge c_clk);   
+			@(posedge c_clk);   
 		end
 		
 	endtask
@@ -492,10 +530,10 @@ module testbench;
 			out = op1 - op2;
 		end
 		if(command == 0101) begin
-			out = op1*2**op1;		//shift left == mult by 2^x
+			out = op1 << op2;
 		end
 		if(command == 0110) begin
-			out = op1/2**op2;		//shift right == divide by 2^x
+			out = op1 >> op2;
 		end
 	endtask
 
