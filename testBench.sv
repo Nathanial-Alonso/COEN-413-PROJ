@@ -16,6 +16,7 @@ module testbench;
 	logic [0:31] op1;
 	logic [0:31] op2;
 	logic [0:31] expected;
+	logic [0:31] currentCommand;
 
 	/*localparam NoOP = 4'b0000,
 	        Add = 4'b0001,
@@ -68,15 +69,10 @@ module testbench;
 
 	initial begin
 		
-		integer i;
-		int cycleOnReset = 1;
-
 		/////////////////////////
 		//BASIC FUNCTION TESTS
 		////////////////////////
 		
-		// This is the working reset
-		// The specification reset is done by
 		resetDUT(0);
 		
 		//resetAll(1);
@@ -84,7 +80,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("---------Running Test 1.1 Command and response for each port--------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			cycle_commands(i,1);
 			resetDUT(0);
@@ -93,47 +89,120 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 1.2.1 Addition check-----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
-			$display("Testing port %0d", i);
-			calculate(i,4'b0001,32'h00000003,32'h00000005);
-			compare_expected_value(i,32'h00000008);
-			resetDUT(0);
-		end
 
+
+		resetDUT(0);
+		currentCommand = 4'b0001;
+		op1 = 32'h00000003;
+		op2 = 32'h00000005;
+		expected = 32'h00000008;
+		driveTest();
+
+
+		resetDUT(0);
+		op1 = 32'h00000005;
+		op2 = 32'h00000003;
+		expected = 32'h00000008;
+		driveTest();
+
+		resetDUT(0);
+		op1 = 32'h50000005;
+		op2 = 32'h30000003;
+		expected = 32'h80000008;
+		driveTest();
+
+		resetDUT(0);
+		op1 = 32'h30000003;
+		op2 = 32'h50000005;
+		expected = 32'h80000008;
+		driveTest();
+
+		
 		$display("--------------------------------------------------------------------");
 		$display("----------------Running Test 1.2.2 Subtraction check----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin	
-			$display("Testing port %0d", i);
-			calculate(i,4'b0010,32'h00000005,32'h00000002);
-			compare_expected_value(i,32'h00000003);
-			resetDUT(0);
-		end
 		
+		resetDUT(0);
+		currentCommand = 4'b0010;
+		op1 = 32'h00000003;
+		op2 = 32'h00000005;
+		expected = 32'h00000008;
+		driveTest();
+
+		resetDUT(0);
+		op1 = 32'h00000005;
+		op2 = 32'h00000003;
+		expected = 32'h00000008;
+		driveTest();
+
+		resetDUT(0);
+		op1 = 32'h50000005;
+		op2 = 32'h30000003;
+		expected = 32'h80000008;
+		driveTest();
+
+		resetDUT(0);
+		op1 = 32'h30000003;
+		op2 = 32'h50000005;
+		expected = 32'h80000008;
+		driveTest();
+
 		$display("--------------------------------------------------------------------");
 		$display("----------------Running Test 1.2.3 Shift left check-----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
- 			$display("Testing port %0d", i);
-			calculate(i,4'b0101,32'h00000005,32'h00000003);
-			compare_expected_value(i,32'h00000028);
-			resetDUT(0);
-		end
+
+	
+		resetDUT(0);
+		currentCommand = 4'b0101;
+		op1 = 32'h00000005;
+		op2 = 32'h00000003;
+		expected = 32'h00000028;
+		driveTest();
+		resetDUT(0);
+
+
+		op1 = 32'h00000003;
+		op2 = 32'h00000005;
+		expected = 32'h00000060;
+		driveTest();
+		resetDUT(0);
+		
+
 
 		$display("--------------------------------------------------------------------");
 		$display("----------------Running Test 1.2.4 Shift right check----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
-			$display("Testing port %0d", i);
-			calculate(i,4'b0110,32'h00000028,32'h00000003);
-			compare_expected_value(i,32'h00000005);
-			resetDUT(0);
-		end
+
+		resetDUT(0);
+		currentCommand = 4'b0110;
+		op1 = 2'h00000028;
+		op2 = 32'h00000003;
+		expected = 32'h00000005;
+		driveTest();
+		resetDUT(0);
+		
+
+
+		op1 = 32'h00000003;
+		op2 = 32'h00000005;
+		expected = 32'h00000060;
+		driveTest();
+		resetDUT(0);
+		
+
+		op1 = 32'h30000000;
+		op2 = 32'h50000000;
+		expected = 32'h00000060;
+		driveTest();
+		resetDUT(0);
+
+
+
 
 		$display("--------------------------------------------------------------------");
 		$display("-----------------Running Test 1.3.1 Overflow check------------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'h00000003,32'hFFFFFFFF);
 			check_for_response(i);
@@ -143,7 +212,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("-----------------Running Test 1.3.2 Underflow check-----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0010,32'h11111111,32'h20000000);
 			check_for_response(i);
@@ -168,7 +237,7 @@ module testbench;
 		op2 = 32'h00000111;
 		expected = 32'h00000000;
 
-		for(i = 0; i < $size(cmd); i++) begin					// First loop is for all ports
+		for(int i = 0; i < $size(cmd); i++) begin					// First loop is for all ports
 			$display("Testing port %0d",i);
 			
 			for(int j = 0; j < $size(commands); j++) begin		// Second is select first command
@@ -208,7 +277,7 @@ module testbench;
                 op2 = 32'h00000111;
                 expected = 32'h00000000;
 
-                for(i = 0; i < $size(commands); i++) begin                                   // First loop is for all commands
+                for(int i = 0; i < $size(commands); i++) begin                                   // First loop is for all commands
                         $display("Testing commands %b",commands[i]);
 
                         for(int j = 0; j < $size(cmd); j++) begin          // Second is select first port
@@ -257,7 +326,7 @@ module testbench;
 		$display("------------------Running Test 2.3 High order bits------------------");
 		$display("--------------------------------------------------------------------");
 		$display("SHIFT LEFT");
-                for(i = 0; i < $size(cmd); i++) begin
+                for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0101,32'h00000A00,32'hF0030004);
                         compare_expected_value(i,32'h0000A000);
@@ -265,7 +334,7 @@ module testbench;
                 end
 
                 $display("SHIFT RIGHT");
-                for(i = 0; i < $size(cmd); i++) begin
+                for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0110,32'h00300040,32'hFF000004);
                         compare_expected_value(i,32'h00030004);
@@ -275,7 +344,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("-----------Running Test 2.4.1 Corner case overflow of one-----------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'hFFFFFFFF,32'h00000001);
 			check_for_response(i);
@@ -285,7 +354,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("-------------------Running Test 2.4.2 Sum to max--------------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'hFFFF0000,32'h0000FFFF);
 			compare_expected_value(i,32'hFFFFFFFF);
@@ -295,7 +364,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("----------------Running Test 2.4.3 Subtracting equal----------------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0010,32'h00000A00,32'h00000A00);
 			compare_expected_value(i,32'h00000000);
@@ -305,7 +374,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
                 $display("-----------Running Test 2.4.4 Corner case underflow of one----------");
                 $display("--------------------------------------------------------------------");
-                for(i = 0; i < $size(cmd); i++) begin
+                for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0010,32'h00000003,32'h00000004);
                         check_for_response(i);
@@ -316,7 +385,7 @@ module testbench;
 		$display("--------------Running Test 2.4.5 Shifting zero places---------------");
 		$display("--------------------------------------------------------------------");
 		$display("SHIFT LEFT");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0101,32'h00000A00,32'h00000000);
 			compare_expected_value(i,32'h00000A00);
@@ -324,7 +393,7 @@ module testbench;
 		end
 
 		$display("SHIFT RIGHT");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0110,32'h00000A00,32'h00000000);
 			compare_expected_value(i,32'h00000A00);
@@ -335,7 +404,7 @@ module testbench;
 		$display("-------------Running Test 2.4.6 Shifting maximum places-------------");
 		$display("--------------------------------------------------------------------");
 		$display("SHIFT LEFT");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0101,32'h00000001,32'h0000001F);
 			compare_expected_value(i,32'h10000000);
@@ -343,7 +412,7 @@ module testbench;
 		end
 
 		$display("SHIFT RIGHT");
-		for(i = 0; i < $size(cmd); i++) begin
+		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0110,32'h80000000,32'h0000001F);
 			compare_expected_value(i,32'h00000001);
@@ -354,6 +423,45 @@ module testbench;
 		$display("---------------Running Test 2.5 Ignoring invalid data---------------");
 		$display("--------------------------------------------------------------------");
 
+		///Trying multiple permutations of invalid data
+
+		resetDUT(0);
+		expected = 32'h00000000;
+		op1 = 32'h00000005;
+		op2 = 32'h0000000X;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'h0000000X;
+		op2 = 32'h00000005;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'h0000000X;
+		op2 = 32'h0000000X;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'h50000000;
+		op2 = 32'hX0000000;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'hX0000000;
+		op2 = 32'h50000000;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'hX0000000;
+		op2 = 32'hX0000000;
+		invalidCheck();
+
+		resetDUT(0);
+		op1 = 32'h000X0000;
+		op2 = 32'h000X0000;
+		invalidCheck();
+
+		
 
 
 		/////////////////////////
@@ -363,7 +471,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("-------------Running Test 3.1 Ignoring invalid commands-------------");
 		$display("--------------------------------------------------------------------");
-                for(i = 0; i < $size(cmd); i++) begin
+                for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         cycle_illegal_commands(i,1);
                         resetDUT(0);
@@ -393,6 +501,37 @@ module testbench;
 
 	// Functions for a modular test bench
 
+
+
+
+
+	task driveTest();
+		$display(" ");
+		$display("Testing OP1: %h OP2: %h", op1,op2);
+		for(int i = 0; i < $size(cmd); i++) begin
+			$display("Testing port %0d", i);
+				calculate(i,currentCommand,op1,op2);
+				compare_expected_value(i,expected);							//should be zero no change
+				resetDUT(0);
+		end
+	endtask
+
+	task invalidCheck();
+		for(int i = 0; i < $size(cmd); i++) begin
+			$display("Testing OP1: %h OP2: %h", op1,op2);
+			$display("Testing port %0d", i);
+			for(int j = 0; j< $size(commands); j++)begin
+				$display("Testing command %0h", commands[j]);
+				calculate(i,commands[j],op1,op2);
+				compare_expected_value(i,expected);							//should be zero no change
+			    // displayIO();	
+				// check_for_response(i);
+				resetDUT(0);
+			end
+		end
+	endtask
+
+
 	task cycle_commands(int port,int checkResponse);
 		integer j;
 
@@ -417,7 +556,7 @@ module testbench;
 
         task cycle_illegal_commands(int port,int checkResponse);
                 integer j;
-
+				$display("Testing OP1: %h OP2: %h", 32'h00000005,32'h00000003);
                 for(j = 0; j < 5; j++) begin
                         if(checkResponse == 1) begin
                                 $display("Testing illegal command %b",illegal_commands[j]);
@@ -425,13 +564,14 @@ module testbench;
 
                         @(posedge c_clk);
                         cmd[port] = illegal_commands[j];
-                        data_in[port] = 1;
+                        data_in[port] = 32'h00000005;
                         @(posedge c_clk);
-                        data_in[port] = 3;
+                        data_in[port] = 32'h00000003;
                         @(posedge c_clk);
 
                         if(checkResponse == 1) begin
                                 check_for_response(port);
+								compare_expected_value(port,expected);	
                         end
                 end
         endtask
