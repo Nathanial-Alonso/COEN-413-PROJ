@@ -84,7 +84,7 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("---------Running Test 1.1 Command and response for each port--------");
 		$display("--------------------------------------------------------------------");
-		for(i = 0; i < $sixe(cmd); i++) begin
+		for(i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			cycle_commands(i,1);
 			resetDUT(0);
