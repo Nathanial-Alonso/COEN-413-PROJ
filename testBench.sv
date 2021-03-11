@@ -86,6 +86,24 @@ module testbench;
 			resetDUT(0);
 		end
 
+
+
+		$display("--------second iteration command and response--------");
+		for(int i = 0; i < $size(cmd); i++) begin
+			$display("Testing port %0d", i);
+			cycle_commands(i,1);
+			resetDUT(0);
+		end
+
+			$display("--------third iteration command and response--------");
+		for(int i = 0; i < $size(cmd); i++) begin
+			$display("Testing port %0d", i);
+			cycle_commands(i,1);
+			resetDUT(0);
+		end
+
+		
+
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 1.2.1 Addition check-----------------");
 		$display("--------------------------------------------------------------------");
@@ -205,7 +223,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'h00000003,32'hFFFFFFFF);
-			check_for_response(i);
+			check_for_response(i ,4'b0001);
 			resetDUT(0);
 		end
 		
@@ -215,7 +233,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0010,32'h11111111,32'h20000000);
-			check_for_response(i);
+			check_for_response(i,4'b0010);
 			resetDUT(0);
 		end
 
@@ -257,7 +275,7 @@ module testbench;
 					
 					// Check that the second didnt make the initial run change
 					calculate(i,commands[j],op1,op2);	
-					compare_expected_value(i,expected);
+					compare_expected_value(i,expected,commands[k]);
 					resetDUT(0);
 				end
 			end
@@ -299,7 +317,7 @@ module testbench;
 				
                                         	// Check that the second didnt make the initial run change
                                         	calculate(j,commands[i],op1,op2);
-                                        	compare_expected_value(j,expected);
+                                        	compare_expected_value(j,expected, commands[i]);
                                         	resetDUT(0);
 					end
                                 end
@@ -329,7 +347,7 @@ module testbench;
                 for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0101,32'h00000A00,32'hF0030004);
-                        compare_expected_value(i,32'h0000A000);
+                        compare_expected_value(i,32'h0000A000,4'b0101);
                         resetDUT(0);
                 end
 
@@ -337,7 +355,7 @@ module testbench;
                 for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0110,32'h00300040,32'hFF000004);
-                        compare_expected_value(i,32'h00030004);
+                        compare_expected_value(i,32'h00030004,4'b0110);
                         resetDUT(0);
                 end
 
@@ -347,7 +365,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'hFFFFFFFF,32'h00000001);
-			check_for_response(i);
+			check_for_response(i,4'b0001);
 			resetDUT(0);
 		end
 
@@ -357,7 +375,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0001,32'hFFFF0000,32'h0000FFFF);
-			compare_expected_value(i,32'hFFFFFFFF);
+			compare_expected_value(i,32'hFFFFFFFF,4'b0001);
 			resetDUT(0);
 		end
 
@@ -367,7 +385,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0010,32'h00000A00,32'h00000A00);
-			compare_expected_value(i,32'h00000000);
+			compare_expected_value(i,32'h00000000,4'b0010);
 			resetDUT(0);
 		end
 
@@ -377,7 +395,7 @@ module testbench;
                 for(int i = 0; i < $size(cmd); i++) begin
                         $display("Testing port %0d", i);
                         calculate(i,4'b0010,32'h00000003,32'h00000004);
-                        check_for_response(i);
+                        check_for_response(i,4'b0010);
                         resetDUT(0);
                 end
 
@@ -388,7 +406,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0101,32'h00000A00,32'h00000000);
-			compare_expected_value(i,32'h00000A00);
+			compare_expected_value(i,32'h00000A00,4'b0101);
 			resetDUT(0);
 		end
 
@@ -396,7 +414,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0110,32'h00000A00,32'h00000000);
-			compare_expected_value(i,32'h00000A00);
+			compare_expected_value(i,32'h00000A00,4'b0110);
 			resetDUT(0);
 		end
 
@@ -407,7 +425,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0101,32'h00000001,32'h0000001F);
-			compare_expected_value(i,32'h10000000);
+			compare_expected_value(i,32'h10000000,4'b0101);
 			resetDUT(0);
 		end
 
@@ -415,7 +433,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 			calculate(i,4'b0110,32'h80000000,32'h0000001F);
-			compare_expected_value(i,32'h00000001);
+			compare_expected_value(i,32'h00000001,4'b0101);
 			resetDUT(0);
 		end
 
@@ -511,7 +529,7 @@ module testbench;
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 				calculate(i,currentCommand,op1,op2);
-				compare_expected_value(i,expected);							//should be zero no change
+				compare_expected_value(i,expected,currentCommand);							//should be zero no change
 				resetDUT(0);
 		end
 	endtask
@@ -523,7 +541,7 @@ module testbench;
 			for(int j = 0; j< $size(commands); j++)begin
 				$display("Testing command %0h", commands[j]);
 				calculate(i,commands[j],op1,op2);
-				compare_expected_value(i,expected);							//should be zero no change
+				compare_expected_value(i,expected,commands[j]);							//should be zero no change
 			    // displayIO();	
 				// check_for_response(i);
 				resetDUT(0);
@@ -549,7 +567,7 @@ module testbench;
 			@(posedge c_clk);
 					
 			if(checkResponse == 1) begin
-				check_for_response(port);
+				check_for_response(port,commands[j]);
 			end
 		end
 	endtask
@@ -559,7 +577,7 @@ module testbench;
 				$display("Testing OP1: %h OP2: %h", 32'h00000005,32'h00000003);
                 for(j = 0; j < 5; j++) begin
                         if(checkResponse == 1) begin
-                                $display("Testing illegal command %b",illegal_commands[j]);
+                                //$display("Testing illegal command %b",illegal_commands[j]);
                         end
 
                         @(posedge c_clk);
@@ -570,40 +588,40 @@ module testbench;
                         @(posedge c_clk);
 
                         if(checkResponse == 1) begin
-                                check_for_response(port);
-								compare_expected_value(port,expected);	
+                                check_for_response(port,illegal_commands[j]);
+								compare_expected_value(port,expected,illegal_commands[j]);	
                         end
                 end
         endtask
 
 
-	task check_for_response(int port);		
+	task check_for_response(int port, logic [0:3] incommand);		
 		integer i;                
 
 		for(i = 0; i < 100; i++) begin
 			@(negedge c_clk);
 				
 			if(resp[port] == 01) begin
-				$display("Sucessful response");
+				$display("Input command command: %d Response: Sucessful response ",incommand);
 				break;
 			end
 			if(resp[port] == 10) begin
-				$display("Underflow, overflow or invalid command");
+				$display("Input command command:%d Response: Underflow, overflow or invalid ",incommand);
 				break;
 			end
 			if(resp[port] == 11) begin
-				$display("Unused response value obtained");
+				$display("Input command command:%d Response: Unused response value obtained",incommand);
 				break;
 			end
 			if(resp[port] === 2'bxx) begin
-				$display("Error: xx response obtained");
+				$display("Input command command:%d Response: Error: xx response obtained",incommand);
 				break;
 			end
 			
 		end
 		
 		if(resp[port] == 00) begin
-			$display("NO RESPONSE");
+			$display("Input command command:%d Response: NO RESPONSE",incommand);
 		end	
 	endtask
 
@@ -670,7 +688,7 @@ module testbench;
 	endtask
 
 	// Function to compare the actual value with the expected one
-	task compare_expected_value(int port, logic[0:31] expected_data);
+	task compare_expected_value(int port, logic[0:31] expected_data,logic[0:3] incommand);
 		integer i;		
 
 		for(i = 0; i < 40; i++) begin
@@ -690,7 +708,7 @@ module testbench;
 		end
 		//if no comparison check for response
 		if(resp[port] != 01) begin
-			check_for_response(port);
+			check_for_response(port,incommand);
 		end
 	endtask
 
