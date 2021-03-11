@@ -227,8 +227,7 @@ module testbench;
 						$display("Testing second port %0d",k);
                                         	// Calculate new port
                                         	calculate(k,commands[i],op1,op2);
-						
-						
+				
                                         	// Check that the second didnt make the initial run change
                                         	calculate(j,commands[i],op1,op2);
                                         	compare_expected_value(j,expected);
@@ -241,8 +240,18 @@ module testbench;
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 2.2 Priority check-------------------");
 		$display("--------------------------------------------------------------------");
+		
+
+		//The Priority check needs to assert the same commands in parrelle to all the ports and count the number
+		//of clock cycles that have past
+		//it then would need to run this a few times
 
 
+		for(int i = 0; i < 5; i++) begin
+        	$display("Iteration %d", i);
+			calculateParrellel(4'b0001,32'h00000003,32'h00000005);
+			responseTimes();
+		end 
 
 		$display("--------------------------------------------------------------------");
 		$display("------------------Running Test 2.3 High order bits------------------");
@@ -467,6 +476,57 @@ module testbench;
 		@(posedge c_clk);
 		data_in[port] = operand2;
 		@(posedge c_clk);
+	endtask
+
+	task calculateParrellel(logic[0:3] command, logic[0:31] operand1, logic[0:31] operand2);
+		@(posedge c_clk);
+		cmd[3] <= command;
+		data_in[3] <= operand1;
+		cmd[2] <= command;
+		data_in[2] <= operand1;
+		cmd[1] <= command;
+		data_in[1] <= operand1;
+		cmd[0] <= command;
+		data_in[0] <= operand1;
+		@(posedge c_clk);
+		data_in[3] <= operand2;
+		data_in[2] <= operand2;
+		data_in[1] <= operand2;
+		data_in[0] <= operand2;
+		@(posedge c_clk);
+	endtask
+
+
+	task responseTimes();
+		integer i;                
+		int queue[$]; 
+		int found1 =0;
+		int found2 = 0;
+		int found3 =0;
+		int found4 = 0;			//the founds are a workaround atm
+
+		for(i = 0; i < 500; i++) begin
+			@(negedge c_clk);
+
+			if(resp[0] == 01 && found1 == 0) begin
+				queue.push_back(1);
+				found1 = 1;
+			end
+			if(resp[1] == 01 && found2 == 0) begin
+				queue.push_back(2);
+				found2 = 1;
+			end
+			if(resp[2] == 01 && found3 == 0) begin
+				queue.push_back(3);
+				found3 = 1;
+			end
+			if(resp[3] == 01 && found4 == 0) begin
+				queue.push_back(4);
+				found4 = 1;
+			end
+		end
+		$display("Response sequence was: ");
+		foreach(queue[i])$display(" %0d",queue[i]);
 	endtask
 
 	// Function to compare the actual value with the expected one
