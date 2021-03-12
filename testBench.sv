@@ -1,6 +1,6 @@
 // Project One Test Bench
 // Ewan McNeil 40021787
-// Nate
+// Nathanial Martinez 40046299
 // Gabriel 40057854
 
 
@@ -11,13 +11,14 @@ module testbench;
 	logic [1:7] reset;
 
 	// Inputs
-	logic [0:3] commands [5] = '{4'b0000,4'b0001,4'b0010,4'b0101,4'b0110};
-	logic [0:3] illegal_commands [11] = '{4'b0011,4'b0100,4'b0111,4'b1000,4'b1001,4'b1010,4'b1011,4'b1100,4'b1101,4'b1110,4'b1111}; 
+	logic [0:3] commands [4] = '{4'b0001,4'b0010,4'b0101,4'b0110};
+	logic [0:3] illegal_commands [12] = '{4'b0000,4'b0011,4'b0100,4'b0111,4'b1000,4'b1001,4'b1010,4'b1011,4'b1100,4'b1101,4'b1110,4'b1111}; 
 	logic [0:31] op1;
 	logic [0:31] op2;
 	logic [0:31] expected;
 	logic [0:31] currentCommand;
 
+	//not being used at the moment
 	/*localparam NoOP = 4'b0000,
 	        Add = 4'b0001,
 		Sub = 4'b0010,
@@ -142,27 +143,27 @@ module testbench;
 		
 		resetDUT(0);
 		currentCommand = 4'b0010;
-		op1 = 32'h00000003;
-		op2 = 32'h00000005;
-		expected = 32'h00000008;
+		op1 = 32'hFFFFFFFF;
+		op2 = 32'h11111111;
+		expected = 32'hEEEEEEEE;
 		driveTest();
 
 		resetDUT(0);
 		op1 = 32'h00000005;
 		op2 = 32'h00000003;
-		expected = 32'h00000008;
+		expected = 32'h00000002;
 		driveTest();
 
 		resetDUT(0);
 		op1 = 32'h50000005;
 		op2 = 32'h30000003;
-		expected = 32'h80000008;
+		expected = 32'h20000002;
 		driveTest();
 
 		resetDUT(0);
 		op1 = 32'h30000003;
 		op2 = 32'h50000005;
-		expected = 32'h80000008;
+		expected = 32'h00000000;
 		driveTest();
 
 		$display("--------------------------------------------------------------------");
@@ -226,6 +227,9 @@ module testbench;
 			check_for_response(i ,4'b0001);
 			resetDUT(0);
 		end
+
+		
+
 		
 		$display("--------------------------------------------------------------------");
 		$display("-----------------Running Test 1.3.2 Underflow check-----------------");
@@ -261,7 +265,8 @@ module testbench;
 			for(int j = 0; j < $size(commands); j++) begin		// Second is select first command
 				// Getting expected value
 				calculate(i,commands[j],op1,op2);			
-				expectedValue(op1,op2,commands[j],expected);	
+				saveOutput(i,expected);
+
 
 				//resetting the DUT
 				resetDUT(0);
@@ -287,35 +292,28 @@ module testbench;
 
                 resetDUT(0);
 
-                // For each command test on each port(with valid inputs) and test on another port after and ensure it ran properly
-                // Check that its not dirty after running a command before
-                // Expected value is then the first run of the command clean.
-
                 op1 = 32'h00000101;
                 op2 = 32'h00000111;
                 expected = 32'h00000000;
 
-                for(int i = 0; i < $size(commands); i++) begin                                   // First loop is for all commands
+                for(int i = 0; i < $size(commands); i++) begin                                   
                         $display("Testing commands %b",commands[i]);
 
-                        for(int j = 0; j < $size(cmd); j++) begin          // Second is select first port
-                                // Getting expected value
+                        for(int j = 0; j < $size(cmd); j++) begin         
                                 calculate(j,commands[i],op1,op2);
                                 expectedValue(op1,op2,commands[i],expected);
-				
-                                //resetting the DUT
                                 resetDUT(0);
 
-                                //$display("Testing first port %0d",j);
+                              
 
-                                for(int k = 0; k < $size(cmd); k++) begin   // This is select subsequent port
+                                for(int k = 0; k < $size(cmd); k++) begin   
                                         if(j != k) begin
 						$display("Testing first port %0d",j);
 						$display("Testing second port %0d",k);
-                                        	// Calculate new port
+                                    
                                         	calculate(k,commands[i],op1,op2);
 				
-                                        	// Check that the second didnt make the initial run change
+                                        	
                                         	calculate(j,commands[i],op1,op2);
                                         	compare_expected_value(j,expected, commands[i]);
                                         	resetDUT(0);
@@ -331,8 +329,6 @@ module testbench;
 
 		//The Priority check needs to assert the same commands in parrelle to all the ports and count the number
 		//of clock cycles that have past
-		//it then would need to run this a few times
-
 
 		for(int i = 0; i < 5; i++) begin
         	$display("Iteration %d", i);
@@ -638,17 +634,17 @@ module testbench;
 
 	task calculateParrellel(logic[0:3] command, logic[0:31] operand1, logic[0:31] operand2);
 		@(posedge c_clk);
-		cmd[3] <= command;
-		data_in[3] <= operand1;
-		cmd[2] <= command;
-		data_in[2] <= operand1;
+		cmd[3] = command;
+		data_in[3] = operand1;
+		cmd[2] = command;
+		data_in[2] = operand1;
 		cmd[1] <= command;
 		data_in[1] <= operand1;
 		cmd[0] <= command;
 		data_in[0] <= operand1;
 		@(posedge c_clk);
-		data_in[3] <= operand2;
-		data_in[2] <= operand2;
+		data_in[3] = operand2;
+		data_in[2] = operand2;
 		data_in[1] <= operand2;
 		data_in[0] <= operand2;
 		@(posedge c_clk);
@@ -685,6 +681,7 @@ module testbench;
 		end
 		$display("Response sequence was: ");
 		foreach(queue[i])$display(" %0d",queue[i]);
+		displayIO();
 	endtask
 
 	// Function to compare the actual value with the expected one
@@ -738,6 +735,26 @@ module testbench;
 		end
 		
 	endtask
+
+
+
+	// returning a value of a run to test with next
+	task saveOutput(int port, output logic [0:31] out);
+		for(int i = 0; i < 40; i++) begin
+				@(negedge c_clk);
+			
+				if(resp[port] == 01) begin
+					out = data_out[port];
+				end
+		end
+		//if no comparison check for response
+		if(resp[port] != 01) begin
+			out = 32'h00000000;
+			$display("No valid response");
+		end
+	endtask
+
+
 
 	// TODO make sure that the shifting is acutally doing what it is supposed to 
 	task expectedValue( input logic [0:31] op1,logic [0:31] op2, logic [0:3] command, output logic [0:31] out);
