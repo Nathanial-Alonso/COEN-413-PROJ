@@ -513,23 +513,32 @@ module testbench;
 		end
 	end
 
+
+
+
+	/////////////////////////////////////
 	// Functions for a modular test bench
+	/////////////////////////////////////
 
 
 
 
 
+	//Drive test goes through all ports asserting the same values and checks the result
+	//after one trial it resets
 	task driveTest();
 		$display(" ");
 		$display("Testing OP1: %h OP2: %h", op1,op2);
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing port %0d", i);
 				calculate(i,currentCommand,op1,op2);
-				compare_expected_value(i,expected,currentCommand);							//should be zero no change
+				compare_expected_value(i,expected,currentCommand);			
 				resetDUT(0);
 		end
 	endtask
 
+
+	//function used in the invalid test
 	task invalidCheck();
 		for(int i = 0; i < $size(cmd); i++) begin
 			$display("Testing OP1: %h OP2: %h", op1,op2);
@@ -537,7 +546,7 @@ module testbench;
 			for(int j = 0; j< $size(commands); j++)begin
 				$display("Testing command %0h", commands[j]);
 				calculate(i,commands[j],op1,op2);
-				compare_expected_value(i,expected,commands[j]);							//should be zero no change
+				compare_expected_value(i,expected,commands[j]);							
 			    // displayIO();	
 				// check_for_response(i);
 				resetDUT(0);
@@ -546,6 +555,8 @@ module testbench;
 	endtask
 
 
+
+	//cycles through the commands for multiple of tests
 	task cycle_commands(int port,int checkResponse);
 		integer j;
 
@@ -568,6 +579,8 @@ module testbench;
 		end
 	endtask
 
+
+		//cycles through the non valid commands to test
         task cycle_illegal_commands(int port,int checkResponse);
                 integer j;
 				$display("Testing OP1: %h OP2: %h", 32'h00000005,32'h00000003);
@@ -591,6 +604,8 @@ module testbench;
         endtask
 
 
+
+	//check for response looks at the resp value for the port that is passed to it
 	task check_for_response(int port, logic [0:3] incommand);		
 		integer i;                
 
@@ -622,7 +637,7 @@ module testbench;
 	endtask
 
 
-	// Function for calculate the answer of a given a command
+	//calculate sets the command, and operands with proper timing for the port passed it it
 	task calculate(int port, logic[0:3] command, logic[0:31] operand1, logic[0:31] operand2);
 		@(posedge c_clk);
 		cmd[port] = command;
@@ -632,25 +647,29 @@ module testbench;
 		@(posedge c_clk);
 	endtask
 
+
+	//calculate parrelle does the same as calulate for multi port testing
 	task calculateParrellel(logic[0:3] command, logic[0:31] operand1, logic[0:31] operand2);
 		@(posedge c_clk);
-		cmd[3] = command;
-		data_in[3] = operand1;
-		cmd[2] = command;
-		data_in[2] = operand1;
+		cmd[3] <= command;
+		data_in[3] <= operand1;
+		cmd[2] <= command;
+		data_in[2] <= operand1;
 		cmd[1] <= command;
 		data_in[1] <= operand1;
 		cmd[0] <= command;
 		data_in[0] <= operand1;
 		@(posedge c_clk);
-		data_in[3] = operand2;
-		data_in[2] = operand2;
+		data_in[3] <= operand2;
+		data_in[2] <= operand2;
 		data_in[1] <= operand2;
 		data_in[0] <= operand2;
 		@(posedge c_clk);
 	endtask
 
 
+
+	//response times function is used for parrellel checks to make sure no port has priority over another
 	task responseTimes();
 		integer i;                
 		int queue[$]; 
@@ -684,6 +703,7 @@ module testbench;
 		displayIO();
 	endtask
 
+
 	// Function to compare the actual value with the expected one
 	task compare_expected_value(int port, logic[0:31] expected_data,logic[0:3] incommand);
 		integer i;		
@@ -708,6 +728,8 @@ module testbench;
 			check_for_response(port,incommand);
 		end
 	endtask
+
+
 
 	task resetAll(cycleOnReset);
 		resetDUT(cycleOnReset);
@@ -756,7 +778,7 @@ module testbench;
 
 
 
-	// TODO make sure that the shifting is acutally doing what it is supposed to 
+	// calculates in the test bench the proper outputs
 	task expectedValue( input logic [0:31] op1,logic [0:31] op2, logic [0:3] command, output logic [0:31] out);
 		if(command == 0001) begin
 			out = op1 + op2;
@@ -772,6 +794,8 @@ module testbench;
 		end
 	endtask
 
+
+	//resets the wires in the test bench 
 	task resetInputs();
 		for(int i = 0; i < $size(cmd); i++) begin
 			cmd[i] = 0000;
