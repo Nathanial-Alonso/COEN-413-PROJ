@@ -11,7 +11,7 @@
 ## Initial check-in
 ##
 #####################################################
-FILES =  top.sv classPackage.sv testBench.sv Calc2_DesignFiles/calc2_top.sv oop.sv
+FILES =  top.sv classPackage.sv testBench.sv calc2_top.v
 TOPLEVEL = top
 
 include Makefile_non_DPI

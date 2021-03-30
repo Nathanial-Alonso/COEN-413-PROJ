@@ -1,6 +1,4 @@
 package classes;
-
-
 	//transaction Class
 	//is this for one port or for multiple
 	//I think just for one
@@ -10,7 +8,7 @@ package classes;
 		int port;		//used to see which port it is on
 		logic [0:3] cmd;
 		logic [0:31] data_in;
-    	logic [0:1] tag_in;
+    		logic [0:1] tag_in;
 
 		//outputs of device 
 		logic [0:1] resp;
@@ -31,7 +29,7 @@ package classes;
 			copy = new();
 			copy.cmd = cmd;
 			copy.data_in = data_in;
-    		copy.tag_in = tag_in;
+    			copy.tag_in = tag_in;
 
 			//outputs of device 
 			copy.resp = resp;
@@ -43,12 +41,11 @@ package classes;
 	
 
 	///
-	///Command block
+	/// Command block
 	///
 
-	//driver class
+	// Driver
 	class Driver;
-
 		function reset();
 			IF.reset = 7'b1111111;
 			
@@ -74,60 +71,38 @@ package classes;
 	endclass
 
 
-	//monitor
+	// Monitor
+	class Monitor;
 
-		class Monitor;
-
-		endclass
-
+	endclass
 
 	///
-	///Functional block
+	/// Functional blocks
 	///
 	
-	//agent class
+	// Agent
+	class Agent;
+
+	endclass
+
+	// Scoreboard
+	class Scoreboard;
+
+	endclass
 
 
-		class Agent;
+	// Checker 
+	class Checker;
 
-		endclass
+	endclass
 
-	//scoreboard
-
-
-		class Scoreboard;
-
-		endclass
+	///
+	/// Scenario block
+	///
 
 
-	//checker 
-
+	// Generator
+	class Generator;
 		
-		class Checker;
-
-		endclass
-
-
-	
-	///
-	///Scenario block
-	///
-
-
-	//generator
-
-
-		class Generator;
-		
-
-		endclass
-	
-
-
-
-
-
-
+	endclass
 endpackage
-		
-
