@@ -1,6 +1,5 @@
 package classes;
 
-
 	//transaction Class
 	//is this for one port or for multiple
 	//I think just for one
@@ -49,26 +48,26 @@ package classes;
 	//driver class
 	class Driver;
 
+		virtual dut_IF IF;
+
 		function reset();
 			IF.reset = 7'b1111111;
-			
-			repeat(7) @(posedge IF.clk);
-
-			IF.reset = 7'b0000000;
-
-
-			for(int i = 0; i < $size(IF.cmd); i++) begin
-				IF.cmd[i] = 0000;
-				IF.data_in[i] = 32'h00000000;
+			for(int i = 0; i< 7; i++)begin
+				//unsure how to wait for 7 cycles with cb
 			end
+			for(int i = 0; i < $size(IF.cmd); i++) begin
+				IF.cb.cmd[i] = 0000;
+				IF.cb.data_in[i] = 32'h00000000;
+			end
+
 		endfunction;
 
 		function transmitPackets(input Transaction trans[]);
-			@(posedge IF.clk);
-				foreach(trans[i])
-					IF.cmd[i] = trans.cmd;
-					IF.data_in[i] = trans.data_in;
-					IF.tag_in[i] = trans.tag_in;
+				for(int i = 0; i < $size(trans); i++) begin
+					IF.cb.cmd[trans[i].port] = trans[i].cmd;
+					IF.cb.data_in[trans[i].port] = trans[i].data_in;
+					IF.cb.tag_in[trans[i].port] = trans[i].tag_in;
+				end
 		endfunction;
 
 	endclass
@@ -77,6 +76,24 @@ package classes;
 	//monitor
 
 		class Monitor;
+			virtual dut_IF IF;
+
+			function displayInterface();
+
+				$display("c_clk: %b", IF.clk);
+				$display("reset: %b", IF.reset);
+
+				//TODO add tag
+
+				for(int i = 0; i < $size(IF.cmd); i++) begin
+					$display("Port %0d", i);
+					$display("cmd  %b", IF.cmd[i]);
+					$display("data1 %b", IF.data_in[i]);
+					$display("resp1 %b",IF.resp[i]);
+					$display("dataout1 %b",IF.data_out[i]);
+				end
+
+		endfunction
 
 		endclass
 
@@ -86,26 +103,23 @@ package classes;
 	///
 	
 	//agent class
+		//*
 
-
-		class Agent;
-
-		endclass
+		//class Agent;
+		//endclass
 
 	//scoreboard
 
 
-		class Scoreboard;
-
-		endclass
+		//class Scoreboard;
+		//endclass
 
 
 	//checker 
 
 		
-		class Checker;
-
-		endclass
+		//class Checker;
+		//endclass
 
 
 	
@@ -117,17 +131,8 @@ package classes;
 	//generator
 
 
-		class Generator;
-		
-
-		endclass
+		//class Generator;
+		//endclass
 	
-
-
-
-
-
-
 endpackage
 		
-
