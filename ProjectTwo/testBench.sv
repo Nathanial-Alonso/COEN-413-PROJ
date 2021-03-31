@@ -1,4 +1,4 @@
-program testBench(dut_if.testBench IF);
+program testBench(dut_IF.TEST IF);
  import classes::*;
  //Generator generator;
  //Agent agent;
@@ -10,19 +10,33 @@ program testBench(dut_if.testBench IF);
 
     Transaction tarray[10];
     initial begin
+        driver = new();
+        driver.IF = IF;
+
+        monitor = new();
+        monitor.IF = IF;
+
         
+        //just to test the driver and the display 
         generator();
-
-        foreach (tarray[i]) begin
-        $display("cmd: %b, data_in: %b, tag_in: %b", tarray[i].cmd,tarray[i].data_in,tarray[i].tag_in);
-
+        for(int i = 0; i < 10; i++)begin
+            tarray[i].displayInputs();
         end
 
 
-    end
+        
+        driver.transmitOnePacket(tarray[0]);
 
+        monitor.displayInterface();
+
+
+    end
+    
+
+    //TODO move into class and move randomization into it
     task generator();
-        foreach (tarray[i]) begin
+        for(int i = 0; i < 10; i++)begin
+            $display("making new object");
             tarray[i] = new();
         end
     endtask 

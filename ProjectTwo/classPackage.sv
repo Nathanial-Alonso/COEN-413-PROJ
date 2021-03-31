@@ -1,5 +1,7 @@
-package classes;
 
+
+
+package classes;
 	//transaction Class
 	//is this for one port or for multiple
 	//I think just for one
@@ -19,10 +21,16 @@ package classes;
 
 		//TODO make the random values be made by the generator
 		function new();
-			int port = $random();
-			logic [0:3] cmd = $random();
-			logic [0:31] data_in =$random();
-			logic [0:1] tag_in = $random();
+			port = $random;
+			cmd = $random;
+			data_in = $random;
+			tag_in = $random;
+			$display("new transaction");
+		endfunction
+
+
+		function displayInputs();
+			 $display("cmd: %b, data_in: %b, tag_in: %b", cmd,data_in,tag_in);
 		endfunction
 
 		//added a deep copy function
@@ -47,27 +55,31 @@ package classes;
 
 	//driver class
 	class Driver;
-
 		virtual dut_IF IF;
 
 		function reset();
 			IF.reset = 7'b1111111;
-			for(int i = 0; i< 7; i++)begin
-				//unsure how to wait for 7 cycles with cb
-			end
-			for(int i = 0; i < $size(IF.cmd); i++) begin
-				IF.cb.cmd[i] <= 0000;
-				IF.cb.data_in[i] <= 32'h00000000;
-			end
 
+			//fixt reset function
+			//IF.cb.req1_cmd_in <= 4b'0000;
 		endfunction;
 
-		function transmitPackets(input Transaction trans[]);
-				for(int i = 0; i < $size(trans); i++) begin
-					IF.cb.cmd[trans[i].port] <= trans[i].cmd;
-					IF.cb.data_in[trans[i].port] <= trans[i].data_in;
-					IF.cb.tag_in[trans[i].port] <= trans[i].tag_in;
-				end
+
+		//becuase we might want to transmit more than one at once
+		//function transmitPackets(input Transaction trans[]);
+		///		for(int i = 0; i < $size(trans); i++) begin
+		//			IF.cb.req1_cmd_in[trans[i].port] <= trans[i].cmd;
+		//			IF.cb.req1_cmd_in[trans[i].port] <= trans[i].data_in;
+		//			IF.cb.req1_cmd_in[trans[i].port] <= trans[i].tag_in;
+	///			end
+	//	endfunction;
+
+	function transmitOnePacket(input Transaction trans);
+
+			$display("transmitting a packet");
+			IF.cb.req1_cmd_in <= trans.cmd;
+			IF.cb.req1_data_in <= trans.data_in;
+			IF.cb.req1_tag_in <= trans.tag_in;
 		endfunction;
 
 	endclass
@@ -80,19 +92,41 @@ package classes;
 
 			function displayInterface();
 
-				$display("c_clk: %b", IF.clk);
-				$display("reset: %b", IF.reset);
+				for(int i = 0; i <5; i ++)begin
+				
+					$display($realtime);
+					$display("c_clk: %b", IF.c_clk);
+					$display("reset: %b", IF.reset);
 
-				//TODO add tag
+					//TODO add tag
 
-				for(int i = 0; i < $size(IF.cmd); i++) begin
-					$display("Port %0d", i);
-					$display("cmd  %b", IF.cmd[i]);
-					$display("data1 %b", IF.data_in[i]);
-					$display("resp1 %b",IF.resp[i]);
-					$display("dataout1 %b",IF.data_out[i]);
+					$display("Port %0d", 1);
+					$display("cmd  %b", IF.cb.req1_cmd_in);
+					$display("data1 %b", IF.cb.req1_data_in);
+					$display("resp1 %b",IF.cb.out_resp1);
+					$display("dataout1 %b",IF.cb.out_data1);
+
+					$display("Port %0d", 2);
+					$display("cmd  %b", IF.cb.req2_cmd_in);
+					$display("data1 %b", IF.cb.req2_data_in);
+					$display("resp1 %b",IF.cb.out_resp2);
+					$display("dataout1 %b",IF.cb.out_data2);
+
+
+					$display("Port %0d", 3);
+					$display("cmd  %b", IF.cb.req3_cmd_in);
+					$display("data1 %b", IF.cb.req3_data_in);
+					$display("resp1 %b",IF.cb.out_resp3);
+					$display("dataout1 %b",IF.cb.out_data3);
+
+
+					$display("Port %0d", 4);
+					$display("cmd  %b", IF.cb.req4_cmd_in);
+					$display("data1 %b", IF.cb.req4_data_in);
+					$display("resp1 %b",IF.cb.out_resp4);
+					$display("dataout1 %b",IF.cb.out_data4);
 				end
-
+			
 		endfunction
 
 		endclass
