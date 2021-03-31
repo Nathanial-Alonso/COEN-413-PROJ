@@ -56,17 +56,17 @@ package classes;
 				//unsure how to wait for 7 cycles with cb
 			end
 			for(int i = 0; i < $size(IF.cmd); i++) begin
-				IF.cb.cmd[i] = 0000;
-				IF.cb.data_in[i] = 32'h00000000;
+				IF.cb.cmd[i] <= 0000;
+				IF.cb.data_in[i] <= 32'h00000000;
 			end
 
 		endfunction;
 
 		function transmitPackets(input Transaction trans[]);
 				for(int i = 0; i < $size(trans); i++) begin
-					IF.cb.cmd[trans[i].port] = trans[i].cmd;
-					IF.cb.data_in[trans[i].port] = trans[i].data_in;
-					IF.cb.tag_in[trans[i].port] = trans[i].tag_in;
+					IF.cb.cmd[trans[i].port] <= trans[i].cmd;
+					IF.cb.data_in[trans[i].port] <= trans[i].data_in;
+					IF.cb.tag_in[trans[i].port] <= trans[i].tag_in;
 				end
 		endfunction;
 

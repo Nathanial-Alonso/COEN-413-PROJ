@@ -1,4 +1,4 @@
-program test(dut_if IF);
+program testBench(dut_if.testBench IF);
  import classes::*;
  //Generator generator;
  //Agent agent;
@@ -9,9 +9,6 @@ program test(dut_if IF);
 
 
     Transaction tarray[10];
-
-
-
     initial begin
         
         generator();

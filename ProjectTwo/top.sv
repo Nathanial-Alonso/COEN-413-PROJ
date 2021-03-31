@@ -1,16 +1,18 @@
-module TestTop;
+module Top;
     bit	clk;	
     always #50 clk = ~clk;	
 
-    virtual dut_IF IF;
-    calc2_top DUT();
-    testBench TEST();
+    dut_IF IF(clk);
+    calc2_top DUT(IF);
+    testBench TEST(IF(IF.testBench));
 
+    initial begin
+        $display("top is running");
+    end
 endmodule
 
 
 interface dut_IF(input logic clk);
-
 
     //inputs to device
     //indexed 0 -> port 1...
@@ -30,9 +32,9 @@ interface dut_IF(input logic clk);
         output #3ns resp, data_out, tag_out; 	
     endclocking
 
-  //from example not sure if needed.
-  //  modport	TEST	(clocking	cb, output	rst);
-  //  modport	DUT	(input	request,	rst,	output	grant);	
+  //ASYNC reset
+    modport	testBench (clocking cb,reset);
+   // modport	DUT	(input	request,	rst,	output	grant);	
 
     
 
