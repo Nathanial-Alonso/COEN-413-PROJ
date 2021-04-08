@@ -35,7 +35,7 @@ package classes;
 
 
 		function displayInputs();
-			 $display("cmd: %b, data_in_1: %b, data_in_2: %b, tag_in: %b", cmd,data_in_1,data_in_2,tag_in);
+			 $display("cmd: %b, data_in_1: %d, data_in_2: %d, tag_in: %b", cmd,data_in_1,data_in_2,tag_in);
 		endfunction
 
 		//added a deep copy function
@@ -200,16 +200,20 @@ package classes;
 				$display("on port", trans.port);
 
 				if(trans.port == 00)begin
-					@(IF.c_clk);
+					
 					IF.cb.req1_cmd_in <= trans.cmd;
 					IF.cb.req1_tag_in <= trans.tag_in;
 					IF.cb.req1_data_in <= trans.data_in_1;
+					$display("first data drive");
 					@(IF.cb);
+					//IF.printIF();
 					IF.cb.req1_data_in <= trans.data_in_2;
+					//@(IF.cb);
+					//$display("Second data drive");
+					//IF.printIF();
 				end
 
 				if(trans.port == 01)begin
-					@(IF.c_clk);
 					IF.cb.req2_cmd_in <= trans.cmd;
 					IF.cb.req2_tag_in <= trans.tag_in;
 					IF.cb.req2_data_in <= trans.data_in_1;
@@ -218,7 +222,6 @@ package classes;
 				end
 
 				if(trans.port ==10)begin
-					@(IF.cb);
 					IF.cb.req3_cmd_in <= trans.cmd;
 					IF.cb.req3_tag_in <= trans.tag_in;
 					IF.cb.req3_data_in <= trans.data_in_1;
@@ -227,13 +230,18 @@ package classes;
 				end
 
 				if(trans.port == 11)begin
-					@(IF.cb);
 					IF.cb.req4_cmd_in <= trans.cmd;
 					IF.cb.req4_tag_in <= trans.tag_in;
 					IF.cb.req4_data_in <= trans.data_in_1;
 					@(IF.cb);
 					IF.cb.req4_data_in <= trans.data_in_2;
 				end
+
+			//IF.printIF();
+			@(IF.c_clk);
+			@(IF.c_clk);
+			@(IF.c_clk);
+			@(IF.c_clk);
 
 		
 		end
@@ -412,11 +420,12 @@ package classes;
 		task run();
 			$display("starting the monitor");
 		 fork
-			//watchInputOne();
-			watchOutputOne();
-			watchOutputTwo();
-			watchOutputThree();
-			watchOutputFour();
+			watchInputOne();
+
+			//watchOutputOne();
+			//watchOutputTwo();
+			//watchOutputThree();
+			//watchOutputFour();
 		 join
 		endtask
 			
@@ -426,22 +435,26 @@ package classes;
 		task watchInputOne();
 		 forever begin
 		   Transaction fresh;
-		   //@(posedge IF.c_clk)
-		   //wait for clock or wait for new command or new tag?
-		    @(IF.cb.req1_tag_in);
+
+		   @(IF.cb.req1_data_in);
 		   //make a new transaction object
 			$display("Monitor: seeing new transaction on port 1 at time %t", $time);
-			fresh = new(2'b00,IF.req1_tag_in);
-			fresh.cmd = IF.req1_cmd_in;
-			fresh.data_in_1 = IF.req1_data_in;
-		  @(posedge IF.c_clk)
-			fresh.data_in_2 = IF.req1_data_in;
+			//IF.printIF();
+			fresh = new(2'b00,IF.cb.req1_tag_in);		//port is 00 and pass new tag in
+			fresh.cmd = IF.cb.req1_cmd_in;
+			fresh.data_in_1 = IF.cb.req1_data_in;
+	
+	
+		  @(IF.cb.req1_data_in)
+			fresh.data_in_2 = IF.cb.req1_data_in;
+			$display("Monitor:");
 			fresh.displayInputs();
 
 			
 		  fork
-			watchOutputOne();
-		  join
+			watchOutputOne(fresh);
+		  join_none
+		  //join none so the watchinputoOne is resarted
 		
 		
 		
@@ -450,18 +463,18 @@ package classes;
 
 		endtask
 
-		//task watchOutputOne(Transaction fresh);
-		task watchOutputOne();
-		Transaction fresh;
+		task watchOutputOne(Transaction fresh);
+		//task watchOutputOne();
+		
 		$display("Monitor: waiting for response on port 1");
 
-		forever begin
-			@(IF.out_resp1)
+			
+			//TODO wait for equal tag
+			@(IF.cb.out_resp1)
 				fresh = new(2'b00,IF.req1_tag_in);
 				fresh.resp = IF.out_resp1;
 				fresh.data_out = IF.out_data1;
 				fresh.tag_out = IF.out_tag1;
-			
 			
 			$display("Monitor Received response on port one");
 			$display("Resp: %b", fresh.resp);
@@ -472,7 +485,7 @@ package classes;
 		//then send over to the scoreboard
 		
 		
-		end
+		
 		endtask
 
 		task watchOutputTwo();
@@ -596,9 +609,9 @@ package classes;
 			Transaction trans;
 			
 			task run();
-				 for(int i = 0; i < 1; i++)begin
+				 for(int i = 0; i < 2; i++)begin
 				    $display("Generator: making new object");
-				    trans = new(2'b01,2'b01);
+				    trans = new(2'b00,2'b00);
 				    trans.randomize();
 				    trans.displayInputs();
 				    driverSingleMB.put(trans);
