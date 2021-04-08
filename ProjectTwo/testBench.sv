@@ -16,7 +16,7 @@ DriverSingle driverS;
 
 	driverMB = new();
 	scoreboardMB = new();
-	driverSingleMB = new();
+	driverSingleMB = new(1);
 
 	generator = new();
 	generator.driverMB = driverMB;
@@ -77,12 +77,17 @@ DriverSingle driverS;
 
 
 
-        @(IF.cb);
-        @(IF.cb);
-        @(IF.cb);
+        @(IF.c_clk);
+        @(IF.c_clk);
+        @(IF.c_clk);
      
 
         IF.reset = 0; 
+
+	@(IF.c_clk);
+   	@(IF.c_clk);
+	@(IF.c_clk);
+   	@(IF.c_clk);	
     endtask
 
 endprogram
