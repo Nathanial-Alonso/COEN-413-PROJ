@@ -69,5 +69,21 @@ interface dut_IF(input bit c_clk);
 		output out_resp1, out_data1, out_tag1, out_resp2, out_data2, out_tag2,out_resp3, out_data3, out_tag3, out_resp4, out_data4, out_tag4 );	
 
 
+	task printIF();
+		$display(req1_cmd_in);
+		$display(req1_data_in);
+		$display(req1_tag_in);
+
+
+
+		//outputs of device 
+		//I think they have to be logic
+		$display(out_resp1);
+		$display(out_data1);
+		$display(out_tag1);
+	endtask
+		
+
+
 endinterface
 
