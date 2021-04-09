@@ -11,8 +11,8 @@
 ## Initial check-in
 ##
 #####################################################
-FILES =  top.sv classPackage.sv testBench.sv calc2_top.v
-TOPLEVEL = top
+FILES = calc2_top.v classPackage.sv testBench.sv top.sv
+TOPLEVEL = Top
 
 include Makefile_non_DPI
 
