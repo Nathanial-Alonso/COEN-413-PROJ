@@ -11,7 +11,7 @@ module Top;
 			.req4_cmd_in(IF.req4_cmd_in), .req4_data_in(IF.req4_data_in),.req4_tag_in(IF.req4_tag_in), .out_resp4(IF.out_resp4), .out_data4(IF.out_data4), .out_tag4(IF.out_tag4));
 
     initial begin
-        $display("top is running");
+        $display("Top is running");
     end
 endmodule
 
