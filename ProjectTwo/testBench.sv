@@ -2,25 +2,34 @@ program testBench(dut_IF.TEST IF);
 	import classes::*;
 	Generator generator;
 	//Agent agent;
-	//Scoreboard scoreboard;
-	//Checker checker;
+	Scoreboard scoreboard;
+	Checker checkerOB;
 	Monitor monitor;
 	DriverSingle driverS;
 
-	mailbox driverMB;
+	//mailbox driverMB;
 	mailbox scoreboardMB; 
 	mailbox driverSingleMB;
+	mailbox SBtocheckerMB;
+ 	mailbox MNtocheckerMB;
 
 	event drv_done;
 
     	initial begin
 
-		driverMB = new();
+		//driverMB = new();
 		scoreboardMB = new();
 		driverSingleMB = new(1);
+		SBtocheckerMB = new();
+		MNtocheckerMB = new();
 
 		generator = new();
 		generator.driverSingleMB = driverSingleMB;
+		generator.scoreboardMB = scoreboardMB;
+
+		checkerOB = new();
+		checkerOB.SBtocheckerMB = SBtocheckerMB;
+		checkerOB.MNtocheckerMB = MNtocheckerMB;
 	
 		driverS = new();
 		driverS.IF = IF;
@@ -28,17 +37,24 @@ program testBench(dut_IF.TEST IF);
 
         	monitor = new();
 		monitor.IF = IF;
+		monitor.MNtocheckerMB = MNtocheckerMB;
        
 		driverS.drv_done = drv_done;
 		generator.drv_done = drv_done;
 
+		//going to use the same mailbox as the driver for now
+		scoreboard = new();
+		scoreboard.scoreboardMB = scoreboardMB;
+		scoreboard.SBtocheckerMB = SBtocheckerMB;
+
         	reset();
-        	//just to test the driver and the display
 
 	 	fork
         		monitor.run();
 			driverS.run();
 			generator.run();
+			scoreboard.run();
+			checkerOB.run();
     		join 
 
 		$display("End of program");
