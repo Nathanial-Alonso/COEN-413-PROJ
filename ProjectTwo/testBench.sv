@@ -14,12 +14,13 @@ program testBench(dut_IF.TEST IF);
  	mailbox MNtocheckerMB;
 
 	event drv_done;
+	event gen_done;
 
     	initial begin
 
 		//driverMB = new();
 		scoreboardMB = new();
-		driverSingleMB = new(1);
+		driverSingleMB = new();
 		SBtocheckerMB = new();
 		MNtocheckerMB = new();
 
@@ -40,7 +41,10 @@ program testBench(dut_IF.TEST IF);
 		monitor.MNtocheckerMB = MNtocheckerMB;
        
 		driverS.drv_done = drv_done;
+		driverS.gen_done = gen_done;
 		generator.drv_done = drv_done;
+		generator.gen_done = gen_done;
+		
 
 		//going to use the same mailbox as the driver for now
 		scoreboard = new();
