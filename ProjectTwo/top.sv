@@ -82,7 +82,6 @@ interface dut_IF(input bit c_clk);
 		$display(out_data1);
 		$display(out_tag1);
 	endtask
-		
-
+	
 
 endinterface
