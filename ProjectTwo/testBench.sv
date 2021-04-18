@@ -15,6 +15,9 @@ program testBench(dut_IF.TEST IF);
 
 	event drv_done;
 	event gen_done;
+	event mon_done;
+	event check_done;
+	event test_done;
 
     	initial begin
 
@@ -27,10 +30,16 @@ program testBench(dut_IF.TEST IF);
 		generator = new();
 		generator.driverSingleMB = driverSingleMB;
 		generator.scoreboardMB = scoreboardMB;
+		generator.check_done = check_done;
+		generator.gen_done = gen_done;
+		generator.test_done = test_done;
+		
 
 		checkerOB = new();
 		checkerOB.SBtocheckerMB = SBtocheckerMB;
 		checkerOB.MNtocheckerMB = MNtocheckerMB;
+		checkerOB.check_done = check_done;
+		checkerOB.mon_done = mon_done;
 	
 		driverS = new();
 		driverS.IF = IF;
@@ -39,11 +48,13 @@ program testBench(dut_IF.TEST IF);
         	monitor = new();
 		monitor.IF = IF;
 		monitor.MNtocheckerMB = MNtocheckerMB;
+		monitor.drv_done = drv_done;
+		monitor.mon_done = mon_done;
        
 		driverS.drv_done = drv_done;
 		driverS.gen_done = gen_done;
-		generator.drv_done = drv_done;
-		generator.gen_done = gen_done;
+		
+
 		
 
 		//going to use the same mailbox as the driver for now
