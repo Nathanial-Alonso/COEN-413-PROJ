@@ -38,8 +38,13 @@ package classes;
 			 $display("T: %0t [Transaction] port: %b cmd: %b data_in_1: %0d data_in_2: %0d tag_in: %b", $time, port, cmd, data_in_1, data_in_2, tag_in);
 		endfunction
 
+		function displayTagPort();
+				 $display("T: %0t [Transaction] port: %b tag_out: %b", $time, port, tag_out);
+		endfunction
+
 		//added a deep copy function
 		function void copy(Transaction tmp);
+			this.port =tmp.port;
     			this.cmd = tmp.cmd;
     			this.data_in_1 = tmp.data_in_1;
    			this.data_in_2 = tmp.data_in_2;
@@ -79,11 +84,8 @@ package classes;
 			$display("T: %0t [Driver] starting...", $time);
 
 			forever begin
-			     
-
+			   
 			      @gen_done;	//wait for the generator to signal completion
-			
-
 				//load values from the generator into 4 queues each for a port
 				while(driverSingleMB.num() > 0)begin
 					Transaction trans;
@@ -187,9 +189,9 @@ package classes;
 				IF.cb.req4_data_in <= tranFour.data_in_2;
 				end
 
-
+			$display("T: %0t [Driver] LOOP", $time);
 				end
-			
+			$display("T: %0t [Driver] Drive done asserted", $time);
 			->drv_done;
 			end
 		endtask
@@ -210,18 +212,37 @@ package classes;
 		//TODO 
 		mailbox scoreboardMail;
 		mailbox MNtocheckerMB;
+		event mon_done;
+		event drv_done;
+		int threadCount;
 
 		task run();
 			$display("T: %0t [Monitor] starting...", $time);
+			threadCount = 0;
 		
 			fork
 				watchInputOne();
 				watchInputTwo();
 				watchInputThree();
 				watchInputFour();
+				waitDriver();
 		 	join
-		endtask
+
+
 			
+		endtask
+			task waitDriver();
+			//not quite sure if this is setup correctly
+			forever begin
+				$display("T: %0t [Monitor] Waiting for driver", $time);
+				@(drv_done);
+				$display("T: %0t [Monitor] Drive done asserted, waiting for final signals", $time);
+					
+				#5000 ->mon_done;
+				$display("T: %0t [Monitor] Monitor finished", $time);
+				
+			end
+			endtask
 		
 		//This concept of watching the inputs maybe isnt needed
 		task watchInputOne();
@@ -244,6 +265,7 @@ package classes;
 
 		  		fork
 					watchOutputOne(fresh);
+					threadCount = threadCount +1;
 		  		join_none
 		  		//join none so the watchInputOne is restarted
 	         	end
@@ -318,6 +340,7 @@ package classes;
 				fresh.displayInputs();
 
 		  		fork
+					
 					watchOutputFour(fresh);
 		  		join_none
 		  		//join none so the watchInputFour is restarted
@@ -325,32 +348,14 @@ package classes;
 		endtask
 
 		task watchOutputOne(Transaction fresh);
-			$display("T: %0t [Monitor] waiting for response on port 0", $time);
-
-			//TODO wait for equal tag
-			@(IF.cb.out_resp1)
-				
-				fresh.resp = IF.out_resp1;
-				fresh.data_out = IF.out_data1;
-				fresh.tag_out = IF.out_tag1;
-			
-			$display("T: %0t [Monitor] received response on port 0", $time);
-			$display("T: %0t [Monitor] Resp: %b Data: %0d Tag: %b", $time, fresh.resp, fresh.data_out, fresh.tag_out);
-
-			//TODO
-			//then send over to the scoreboard
-			MNtocheckerMB.put(fresh);
-		endtask
-
-		task watchOutputTwo(Transaction fresh);	
 			$display("T: %0t [Monitor] waiting for response on port 1", $time);
 
 			//TODO wait for equal tag
-			@(IF.cb.out_resp2)
+			wait(IF.cb.out_tag1 == fresh.tag_in);
 				
-				fresh.resp = IF.out_resp2;
-				fresh.data_out = IF.out_data2;
-				fresh.tag_out = IF.out_tag2;
+				fresh.resp = IF.cb.out_resp1;
+				fresh.data_out = IF.cb.out_data1;
+				fresh.tag_out = IF.cb.out_tag1;
 			
 			$display("T: %0t [Monitor] received response on port 1", $time);
 			$display("T: %0t [Monitor] Resp: %b Data: %0d Tag: %b", $time, fresh.resp, fresh.data_out, fresh.tag_out);
@@ -360,40 +365,71 @@ package classes;
 			MNtocheckerMB.put(fresh);
 		endtask
 
-		task watchOutputThree(Transaction fresh);
+		task watchOutputTwo(Transaction fresh);	
+
+		
 			$display("T: %0t [Monitor] waiting for response on port 2", $time);
 
 			//TODO wait for equal tag
-			@(IF.cb.out_resp3)
+			wait(IF.cb.out_tag2 == fresh.tag_in);
 				
-				fresh.resp = IF.out_resp3;
-				fresh.data_out = IF.out_data3;
-				fresh.tag_out = IF.out_tag3;
+				fresh.resp = IF.cb.out_resp2;
+				fresh.data_out = IF.cb.out_data2;
+				fresh.tag_out = IF.cb.out_tag2;
 			
 			$display("T: %0t [Monitor] received response on port 2", $time);
 			$display("T: %0t [Monitor] Resp: %b Data: %0d Tag: %b", $time, fresh.resp, fresh.data_out, fresh.tag_out);
 
 			//TODO
 			//then send over to the scoreboard
+			
 			MNtocheckerMB.put(fresh);
+
+			
 		endtask
 
-		task watchOutputFour(Transaction fresh);
+		task watchOutputThree(Transaction fresh);
+			
+			
 			$display("T: %0t [Monitor] waiting for response on port 3", $time);
 
 			//TODO wait for equal tag
-			@(IF.cb.out_resp4)
+			wait(IF.cb.out_tag3 == fresh.tag_in);
 				
-				fresh.resp = IF.out_resp4;
-				fresh.data_out = IF.out_data4;
-				fresh.tag_out = IF.out_tag4;
+				fresh.resp = IF.cb.out_resp3;
+				fresh.data_out = IF.cb.out_data3;
+				fresh.tag_out = IF.cb.out_tag3;
 			
 			$display("T: %0t [Monitor] received response on port 3", $time);
 			$display("T: %0t [Monitor] Resp: %b Data: %0d Tag: %b", $time, fresh.resp, fresh.data_out, fresh.tag_out);
 
 			//TODO
 			//then send over to the scoreboard
+		
 			MNtocheckerMB.put(fresh);
+			
+		endtask
+
+		task watchOutputFour(Transaction fresh);
+
+			
+			$display("T: %0t [Monitor] waiting for response on port 4", $time);
+
+			//TODO wait for equal tag
+			wait(IF.cb.out_tag4 == fresh.tag_in);
+				
+				fresh.resp = IF.cb.out_resp4;
+				fresh.data_out = IF.cb.out_data4;
+				fresh.tag_out = IF.cb.out_tag4;
+			
+			$display("T: %0t [Monitor] received response on port 4", $time);
+			$display("T: %0t [Monitor] Resp: %b Data: %0d Tag: %b", $time, fresh.resp, fresh.data_out, fresh.tag_out);
+
+			//TODO
+			//then send over to the scoreboard
+			
+			MNtocheckerMB.put(fresh);
+			
 		endtask
 	endclass
 
@@ -483,6 +519,10 @@ package classes;
 	//Two or three tasks, one to wait for values from the scoreboard and put them in a queue
 	//
 	class Checker;
+		event test_done;
+		event mon_done;
+		event check_done;
+		int testCount;
 		mailbox SBtocheckerMB;
 		mailbox MNtocheckerMB;
 		Transaction compareTranQueue[$];
@@ -493,15 +533,41 @@ package classes;
 				fork
 				    recieveFromMonitor();
 				    recieveFromScoreboard();
+			            waitMonitor();
 				join
 				end
+
+			//when generator finishes its tests checker will keep going for a bit
+			//this will run in a seperate thread
+			
 		endtask
+
+			task waitMonitor();
+			 forever begin
+				@(mon_done);
+				$display("T: %0t [Checker] Monitor done waiting for rest of signals", $time);
+				//while(compareTranQueue.size() > 0);
+
+				
+				#2000
+				$display("T: %0t [Checker] Asserting Checkdone number of transactions checked:", $time, testCount);
+				$display("T: %0t [Checker] Number of transactions unseen", $time, compareTranQueue.size());
+
+				foreach(compareTranQueue[i])  $display("\tScoreboardTransaction[%0d] = %0d",i,compareTranQueue[i].displayInputs());
+				testCount = 0;
+				compareTranQueue.delete();
+				->check_done;
+			  end
+			endtask
+
+		
 
 		task recieveFromScoreboard();
 			forever begin
 				Transaction SBoutput;
 				SBtocheckerMB.get(SBoutput); //blocking call
 				$display("T: %0t [Checker] Recieved transaction from Scoreboard", $time);
+				SBoutput.displayTagPort();
 				
 				compareTranQueue.push_back(SBoutput);
 			end
@@ -513,6 +579,8 @@ package classes;
 				Transaction MNoutput;
 				MNtocheckerMB.get(MNoutput);
 				$display("T: %0t [Checker] Recieved transaction from Monitor", $time);
+				MNoutput.displayTagPort();
+				testCount = testCount +1;
 				fork
 					compareTrans(MNoutput);
 				join_none
@@ -521,14 +589,28 @@ package classes;
 		endtask;
 
 		task compareTrans(Transaction fromDUT);
+			Transaction compareTo;
 			Transaction fromScore[$];
-			fromScore = compareTranQueue.find(x) with (x.port == fromDUT.port && x.tag_out == fromDUT.tag_out);
-
+			int indexes[$];
+			int index;
+			fromScore = compareTranQueue.find() with (item.port == fromDUT.port && item.tag_out == fromDUT.tag_out);
+			indexes = compareTranQueue.find_index() with (item.port == fromDUT.port && item.tag_out == fromDUT.tag_out);
+			
 			if(fromScore.size == 0)begin
-				$display("T: %0t [Checker]No data found for command on Port %0d with tag %d", $time, fromDUT.port,fromDUT.tag_out);
+				$display("T: %0t [Checker]No data found for command on Port %0d with tag %0d", $time, fromDUT.port,fromDUT.tag_out);
 			end
 			else begin
-					$display("T: %0t [Checker]DATA FOUND for command on Port %0d with tag %d", $time, fromDUT.port,fromDUT.tag_out);
+				index = indexes.pop_front();
+					$display("T: %0t [Checker]DATA FOUND for command on Port %0d with tag %0d", $time, fromDUT.port,fromDUT.tag_out);
+					compareTo =  fromScore.pop_front();
+					if(compareTo.data_out != fromDUT.data_out)begin
+						$display("T: %0t [Checker]ERROR, port %0d with tag %0d data is %0d should be %0d", $time, fromDUT.port,fromDUT.tag_out,fromDUT.data_out,compareTo.data_out);
+					end
+					else begin
+						$display("T: %0t [Checker] CORRECT, port  %0d with tag %0d data is %0d should be %0d", $time, fromDUT.port,fromDUT.tag_out,fromDUT.data_out,compareTo.data_out);
+					end
+					
+					compareTranQueue.delete(index);
 			end
 
 		endtask
@@ -546,6 +628,8 @@ package classes;
 		mailbox scoreboardMB;
 		event drv_done;
 		event gen_done;
+		event test_done;
+		event check_done;
 		Transaction trans, temp;
 		bit [2:0] portOneCount;
 		bit [2:0] portTwoCount;
@@ -560,15 +644,15 @@ package classes;
 			//going to comment loop for now to just test one operation
 			
 			//TODO randomize a number 1-16 to run	
-			for(int j = 0; j< 1; j++)begin
+			for(int j = 0; j< 10; j++)begin
 				$display("T: %0t [Generator] Making Test # %0b", $time,j);
 			
 			//Max of 16 possible commands running at once
 			//doing it so theres always min of two
-			portOneCount = $urandom_range(2,4);
-			portTwoCount = $urandom_range(2,4);
-			portThreeCount = $urandom_range(2,4);
-			portFourCount = $urandom_range(2,4);
+			portOneCount = $urandom_range(0,4);
+			portTwoCount = $urandom_range(0,4);
+			portThreeCount = $urandom_range(0,4);
+			portFourCount = $urandom_range(0,4);
 			portOneTagCount = 2'b00;
 			portTwoTagCount = 2'b00;
 			portThreeTagCount= 2'b00;
@@ -636,18 +720,15 @@ package classes;
 				    	driverSingleMB.put(trans);
 					portFourTagCount = portFourTagCount + 1;
 			end	
-
-
-				
-
-					
-
 				//make a copy here
 			->gen_done;
-			@(drv_done);
+			//wait until the checker has completed
+			@(check_done);
 		
 		end
-
+		$display("T: %0t [Generator] Test finished", $time);
+		//->test_done;
+		$finish;
 		endtask
 			
 
